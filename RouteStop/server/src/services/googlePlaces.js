@@ -77,4 +77,34 @@ async function getGasStationsWithPrices(lat, lng, radiusMiles = 1, fuelType = 'r
   }));
 }
 
-module.exports = { getFuelPrices, getGasStationsWithPrices };
+async function geocodeAddress(query) {
+  const apiKey = process.env.GOOGLE_PLACES_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const response = await axios.post(
+      'https://places.googleapis.com/v1/places:searchText',
+      { textQuery: query, maxResultCount: 5 },
+      {
+        headers: {
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.displayName,places.location,places.formattedAddress',
+        },
+        timeout: 8000,
+      }
+    );
+
+    return (response.data.places || []).map((place) => ({
+      name: place.formattedAddress || place.displayName?.text || '',
+      lat: place.location.latitude,
+      lng: place.location.longitude,
+      type: 'address',
+      importance: 0.5,
+    }));
+  } catch (err) {
+    console.error('[Google Geocode]', err.response?.data?.error?.message || err.message);
+    return [];
+  }
+}
+
+module.exports = { getFuelPrices, getGasStationsWithPrices, geocodeAddress };
