@@ -1,6 +1,6 @@
 export function fmtPrice(price) {
   if (price == null) return null;
-  return `$${price.toFixed(3)}`;
+  return `$${parseFloat(price).toFixed(3)}`;
 }
 
 export function fmtMiles(miles) {

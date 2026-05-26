@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { fmtPrice } from '../utils/format';
 
 // Fix default leaflet icon issue with Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -100,7 +101,7 @@ export default function MapView({ plan, origin, destination, focusedStop }) {
       {/* Gas stop zone circles + markers */}
       {plan?.gasStops?.map((gs, i) => (
         gs.selected && (
-          <div key={`gas-${i}`}>
+          <React.Fragment key={`gas-${i}`}>
             <Circle
               center={[gs.center.lat, gs.center.lng]}
               radius={gs.radiusUsed * 1609.34}
@@ -109,21 +110,20 @@ export default function MapView({ plan, origin, destination, focusedStop }) {
             <Marker position={[gs.selected.lat, gs.selected.lng]} icon={ICONS.gas}>
               <Popup>
                 <b>{gs.selected.name || gs.selected.brand || 'Gas Station'}</b>
-                {gs.selected.price && <><br />${gs.selected.price.toFixed(3)}/gal</>}
+                {gs.selected.price && <><br />{fmtPrice(gs.selected.price)}/gal</>}
                 <br />Stop {i + 1} — {Math.round(gs.distanceAlongRoute)} mi from start
               </Popup>
             </Marker>
-            {/* Alternate stations (dimmed) */}
             {gs.stations.slice(1, 4).map((s, j) => (
               <Marker key={`gas-alt-${i}-${j}`} position={[s.lat, s.lng]} icon={ICONS.gasAlt} opacity={0.5}>
                 <Popup>
                   <b>{s.name || s.brand || 'Station'}</b>
-                  {s.price && <><br />${s.price.toFixed(3)}/gal</>}
+                  {s.price && <><br />{fmtPrice(s.price)}/gal</>}
                   {s.detour > 0.05 && <><br />+{s.detour.toFixed(1)} mi detour</>}
                 </Popup>
               </Marker>
             ))}
-          </div>
+          </React.Fragment>
         )
       ))}
 

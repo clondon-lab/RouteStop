@@ -39,7 +39,7 @@ async function getFuelPrices(lat, lng, radiusMiles = 1, fuelType = 'regular') {
       const fuelPrices = place.fuelOptions?.fuelPrices || [];
       const match = fuelPrices.find((fp) => fp.type === targetType);
       const priceValue =
-        match?.price ? match.price.units + (match.price.nanos || 0) / 1e9 : null;
+        match?.price ? parseFloat(match.price.units) + (match.price.nanos || 0) / 1e9 : null;
 
       return {
         googlePlaceId: place.id,
