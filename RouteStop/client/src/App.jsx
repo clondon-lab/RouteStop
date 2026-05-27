@@ -5,6 +5,7 @@ import InputPanel from './components/InputPanel';
 import ItineraryPanel from './components/ItineraryPanel';
 import SavedTrips from './components/SavedTrips';
 import NominatimAutocomplete from './components/NominatimAutocomplete';
+import PlanningLoader from './components/PlanningLoader';
 import { rescoreTripPlan } from './utils/scoring';
 import { loadTrips, saveTrip } from './utils/storage';
 
@@ -61,18 +62,44 @@ export default function App() {
     setPlan((p) => rescoreTripPlan(p, preference));
   };
 
-  const handleSelectStation = (zoneIndex, station) => {
-    setPlan((p) => ({
-      ...p,
-      gasStops: p.gasStops.map((gs, i) =>
-        i === zoneIndex ? { ...gs, selected: station } : gs
-      ),
-      itinerary: p.itinerary.map((stop) =>
-        stop.type === 'gas' && stop.zoneIndex === zoneIndex
-          ? { ...stop, selected: station }
-          : stop
-      ),
-    }));
+  const handleSelectStation = (stop, candidate) => {
+    setPlan((p) => {
+      const newItinerary = p.itinerary.map((s) => {
+        if (s.type === 'gas' && stop.type === 'gas' && s.zoneIndex === stop.zoneIndex)
+          return { ...s, selected: candidate };
+        if (s.type === 'food' && stop.type === 'food' && s.requestedAtMile === stop.requestedAtMile)
+          return { ...s, selected: candidate };
+        if (s.type === 'hotel' && stop.type === 'hotel' && s.requestedAtMile === stop.requestedAtMile)
+          return { ...s, selected: candidate };
+        return s;
+      });
+      if (stop.type === 'gas') {
+        return {
+          ...p,
+          gasStops: p.gasStops.map((gs, i) => i === stop.zoneIndex ? { ...gs, selected: candidate } : gs),
+          itinerary: newItinerary,
+        };
+      }
+      if (stop.type === 'food') {
+        return {
+          ...p,
+          foodStops: p.foodStops.map((fs) =>
+            fs.requestedAtMile === stop.requestedAtMile ? { ...fs, selected: candidate } : fs
+          ),
+          itinerary: newItinerary,
+        };
+      }
+      if (stop.type === 'hotel') {
+        return {
+          ...p,
+          hotelStops: p.hotelStops.map((hs) =>
+            hs.requestedAtMile === stop.requestedAtMile ? { ...hs, selected: candidate } : hs
+          ),
+          itinerary: newItinerary,
+        };
+      }
+      return p;
+    });
   };
 
   const handleSaveTrip = () => {
@@ -160,7 +187,9 @@ export default function App() {
             </div>
           )}
 
-          {(!plan || tab === 'plan') && (
+          {loading && <PlanningLoader />}
+
+          {!loading && (!plan || tab === 'plan') && (
             <InputPanel
               onPlan={handlePlan}
               loading={loading}

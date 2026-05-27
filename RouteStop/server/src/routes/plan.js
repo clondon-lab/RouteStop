@@ -91,8 +91,8 @@ router.post('/', async (req, res) => {
       fullRangeMiles = parseFloat(vehicleProfile.mpg) * parseFloat(vehicleProfile.tankSize);
     }
 
-    // 3. Stop zones
-    const zones = calcStopZones(geometry, mr, fullRangeMiles);
+    // 3. Stop zones (cap at 7 to keep response times reasonable)
+    const zones = calcStopZones(geometry, mr, fullRangeMiles).slice(0, 7);
     const noGasNeeded = zones.length === 0;
 
     const weights = WEIGHTS[optimizationPreference] || WEIGHTS.balanced;
