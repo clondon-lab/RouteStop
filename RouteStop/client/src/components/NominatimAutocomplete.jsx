@@ -8,7 +8,6 @@ export default function NominatimAutocomplete({ value, onChange, placeholder, on
   const debounceRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Sync if parent clears the value
   useEffect(() => {
     if (!value) setQuery('');
   }, [value]);
@@ -31,7 +30,7 @@ export default function NominatimAutocomplete({ value, onChange, placeholder, on
   const handleChange = (e) => {
     const q = e.target.value;
     setQuery(q);
-    onChange?.(null); // clear selection while typing
+    onChange?.(null);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => fetchSuggestions(q), 300);
   };
@@ -44,14 +43,13 @@ export default function NominatimAutocomplete({ value, onChange, placeholder, on
   };
 
   const handleBlur = () => {
-    // Small delay so click on suggestion registers first
     setTimeout(() => setOpen(false), 150);
   };
 
   return (
     <div ref={containerRef} className="relative w-full">
       {label && (
-        <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+        <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
       )}
       <input
         type="text"
@@ -60,23 +58,23 @@ export default function NominatimAutocomplete({ value, onChange, placeholder, on
         onFocus={() => results.length > 0 && setOpen(true)}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-colors"
       />
       {loading && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {open && results.length > 0 && (
-        <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+        <ul className="absolute z-50 w-full mt-1 bg-slate-800 border border-white/10 rounded-xl shadow-2xl max-h-56 overflow-y-auto">
           {results.map((r, i) => (
             <li
               key={i}
               onMouseDown={() => handleSelect(r)}
-              className="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 text-gray-700 border-b border-gray-100 last:border-0"
+              className="px-3 py-2.5 text-sm cursor-pointer hover:bg-white/5 text-slate-200 border-b border-white/5 last:border-0 transition-colors"
             >
-              <div className="font-medium truncate">{r.name.split(',')[0]}</div>
-              <div className="text-xs text-gray-400 truncate">{r.name.split(',').slice(1, 3).join(',')}</div>
+              <div className="font-medium truncate text-white">{r.name.split(',')[0]}</div>
+              <div className="text-xs text-slate-500 truncate">{r.name.split(',').slice(1, 3).join(',')}</div>
             </li>
           ))}
         </ul>

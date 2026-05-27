@@ -1,12 +1,18 @@
 import { useState } from 'react';
 
+const inputCls = 'w-full px-2 py-1.5 bg-white/5 border border-white/8 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-green-500/50 transition-colors';
+
 function StopEntry({ stop, index, type, onUpdate, onRemove, totalDistance }) {
   return (
-    <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-      <span>{type === 'food' ? '🍽️' : '🏨'}</span>
+    <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 border ${
+      type === 'food'
+        ? 'bg-orange-500/5 border-orange-500/15'
+        : 'bg-purple-500/5 border-purple-500/15'
+    }`}>
+      <span className="text-base">{type === 'food' ? '🍽️' : '🏨'}</span>
       <div className="flex-1 grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs text-gray-500 mb-0.5">At mile</label>
+          <label className="block text-xs text-slate-500 mb-0.5">At mile</label>
           <input
             type="number"
             value={stop.atMile || ''}
@@ -14,23 +20,23 @@ function StopEntry({ stop, index, type, onUpdate, onRemove, totalDistance }) {
             placeholder="150"
             min="1"
             max={totalDistance || 9999}
-            className="w-full px-2 py-1 border border-gray-200 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputCls}
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-0.5">Around time</label>
+          <label className="block text-xs text-slate-500 mb-0.5">Around time</label>
           <input
             type="time"
             value={stop.timeWindow || ''}
             onChange={(e) => onUpdate(index, 'timeWindow', e.target.value)}
-            className="w-full px-2 py-1 border border-gray-200 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={inputCls + ' [color-scheme:dark]'}
           />
         </div>
       </div>
       <button
         type="button"
         onClick={() => onRemove(index)}
-        className="text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
+        className="text-slate-600 hover:text-red-400 transition-colors text-lg leading-none"
         title="Remove stop"
       >
         ×
@@ -60,14 +66,14 @@ export default function LifestyleStops({ foodStops, hotelStops, onChange, totalD
         <button
           type="button"
           onClick={addFood}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 border border-dashed border-orange-300 rounded-lg text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 border border-dashed border-orange-500/30 rounded-xl text-sm text-orange-400 hover:bg-orange-500/8 transition-colors font-medium"
         >
           + Food Stop
         </button>
         <button
           type="button"
           onClick={addHotel}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 border border-dashed border-purple-300 rounded-lg text-sm text-purple-600 hover:bg-purple-50 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 border border-dashed border-purple-500/30 rounded-xl text-sm text-purple-400 hover:bg-purple-500/8 transition-colors font-medium"
         >
           + Hotel Stop
         </button>

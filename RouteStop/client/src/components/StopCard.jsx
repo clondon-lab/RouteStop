@@ -4,27 +4,30 @@ import { fmtPrice, fmtMiles, fmtEta } from '../utils/format';
 const STOP_CONFIG = {
   gas: {
     icon: '⛽',
-    bgClass: 'bg-green-50 border-green-200',
-    badgeClass: 'bg-green-100 text-green-800',
-    selectedBorder: 'border-green-500 bg-green-50',
-    activeDot: 'bg-green-500',
+    borderClass: 'border-l-green-500',
+    badgeClass: 'bg-green-500/15 text-green-400 border border-green-500/25',
     label: 'Gas Stop',
+    selectedBorder: 'border-green-500 bg-green-500/10',
+    hoverBorder: 'hover:border-green-500/40',
+    activeDot: 'bg-green-500',
   },
   food: {
     icon: '🍽️',
-    bgClass: 'bg-orange-50 border-orange-200',
-    badgeClass: 'bg-orange-100 text-orange-800',
-    selectedBorder: 'border-orange-400 bg-orange-50',
-    activeDot: 'bg-orange-400',
+    borderClass: 'border-l-orange-400',
+    badgeClass: 'bg-orange-500/15 text-orange-400 border border-orange-500/25',
     label: 'Food Stop',
+    selectedBorder: 'border-orange-400 bg-orange-500/10',
+    hoverBorder: 'hover:border-orange-400/40',
+    activeDot: 'bg-orange-400',
   },
   hotel: {
     icon: '🏨',
-    bgClass: 'bg-purple-50 border-purple-200',
-    badgeClass: 'bg-purple-100 text-purple-800',
-    selectedBorder: 'border-purple-400 bg-purple-50',
-    activeDot: 'bg-purple-400',
+    borderClass: 'border-l-purple-400',
+    badgeClass: 'bg-purple-500/15 text-purple-400 border border-purple-500/25',
     label: 'Hotel Stop',
+    selectedBorder: 'border-purple-400 bg-purple-500/10',
+    hoverBorder: 'hover:border-purple-400/40',
+    activeDot: 'bg-purple-400',
   },
 };
 
@@ -34,12 +37,12 @@ function detourLabel(detour) {
   return `+${detour.toFixed(1)} mi · ~${mins} min`;
 }
 
-function GasStopContent({ stop, onSelectStation }) {
+function GasStopContent({ stop, onSelectStation, cfg }) {
   const [showAll, setShowAll] = useState(false);
 
   if (stop.noStationsFound) {
     return (
-      <div className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mt-1">
+      <div className="text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 mt-2">
         ⚠️ No stations found in this zone. Refuel before this point.
       </div>
     );
@@ -48,9 +51,9 @@ function GasStopContent({ stop, onSelectStation }) {
   const visible = showAll ? stop.stations : stop.stations.slice(0, 2);
 
   return (
-    <div className="space-y-2 mt-1">
+    <div className="space-y-1.5 mt-2">
       {stop.widened && (
-        <div className="text-xs text-amber-600">
+        <div className="text-xs text-amber-400/70">
           ↔ Search widened to {stop.radiusUsed.toFixed(1)} mi radius
         </div>
       )}
@@ -63,28 +66,28 @@ function GasStopContent({ stop, onSelectStation }) {
             onClick={() => onSelectStation(s)}
             className={`w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${
               isSelected
-                ? 'border-green-500 bg-green-50 shadow-sm'
-                : 'border-gray-200 bg-white hover:border-green-300'
+                ? `${cfg.selectedBorder} shadow-md`
+                : `border-white/8 bg-white/3 ${cfg.hoverBorder}`
             }`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-800 truncate">
+                <div className="text-sm font-semibold text-white truncate">
                   {s.name || s.brand || 'Gas Station'}
                 </div>
                 {s.price ? (
-                  <div className="text-base font-bold text-green-700 leading-tight">
+                  <div className="text-base font-bold text-green-400 leading-tight">
                     {fmtPrice(s.price)}
-                    <span className="text-xs font-normal text-gray-500">/gal</span>
+                    <span className="text-xs font-normal text-slate-500">/gal</span>
                   </div>
                 ) : (
-                  <div className="text-xs text-gray-400 italic">Price unavailable</div>
+                  <div className="text-xs text-slate-600 italic">Price unavailable</div>
                 )}
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-xs text-gray-500">{detourLabel(s.detour)}</div>
+                <div className="text-xs text-slate-500">{detourLabel(s.detour)}</div>
                 {isSelected && (
-                  <div className="text-xs text-green-600 font-medium mt-0.5">✓ Selected</div>
+                  <div className="text-xs text-green-400 font-semibold mt-0.5">✓ Selected</div>
                 )}
               </div>
             </div>
@@ -95,7 +98,7 @@ function GasStopContent({ stop, onSelectStation }) {
         <button
           type="button"
           onClick={() => setShowAll((x) => !x)}
-          className="text-xs text-gray-400 hover:text-gray-600 w-full text-center py-0.5"
+          className="text-xs text-slate-600 hover:text-slate-400 w-full text-center py-0.5 transition-colors"
         >
           {showAll ? 'Show fewer' : `+ ${stop.stations.length - 2} more options`}
         </button>
@@ -109,20 +112,20 @@ function cuisineLabel(candidate) {
   return raw.replace(/_/g, ' ').replace(/;.*/, '').trim() || 'Restaurant';
 }
 
-function FoodStopContent({ stop, onSelectStation }) {
+function FoodStopContent({ stop, onSelectStation, cfg }) {
   const [showAll, setShowAll] = useState(false);
   const candidates = stop.candidates || [];
 
   if (candidates.length === 0) {
     return (
-      <div className="text-sm text-gray-400 italic mt-1">No restaurants found nearby</div>
+      <div className="text-sm text-slate-500 italic mt-2">No restaurants found nearby</div>
     );
   }
 
   const visible = showAll ? candidates : candidates.slice(0, 4);
 
   return (
-    <div className="space-y-2 mt-1">
+    <div className="space-y-1.5 mt-2">
       {visible.map((c, i) => {
         const isSelected = c.id === stop.selected?.id;
         return (
@@ -132,22 +135,22 @@ function FoodStopContent({ stop, onSelectStation }) {
             onClick={() => onSelectStation(c)}
             className={`w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${
               isSelected
-                ? 'border-orange-400 bg-orange-50 shadow-sm'
-                : 'border-gray-200 bg-white hover:border-orange-300'
+                ? `${cfg.selectedBorder} shadow-md`
+                : `border-white/8 bg-white/3 ${cfg.hoverBorder}`
             }`}
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-800 truncate">
+                <div className="text-sm font-semibold text-white truncate">
                   {c.name || 'Restaurant'}
                 </div>
-                <div className="text-xs text-gray-500 capitalize">{cuisineLabel(c)}</div>
+                <div className="text-xs text-slate-500 capitalize">{cuisineLabel(c)}</div>
                 {c.hours && (
-                  <div className="text-xs text-gray-400 truncate">{c.hours}</div>
+                  <div className="text-xs text-slate-600 truncate">{c.hours}</div>
                 )}
               </div>
               {isSelected && (
-                <div className="text-xs text-orange-500 font-medium flex-shrink-0">✓ Selected</div>
+                <div className="text-xs text-orange-400 font-semibold flex-shrink-0">✓ Selected</div>
               )}
             </div>
           </button>
@@ -157,7 +160,7 @@ function FoodStopContent({ stop, onSelectStation }) {
         <button
           type="button"
           onClick={() => setShowAll((x) => !x)}
-          className="text-xs text-gray-400 hover:text-gray-600 w-full text-center py-0.5"
+          className="text-xs text-slate-600 hover:text-slate-400 w-full text-center py-0.5 transition-colors"
         >
           {showAll ? 'Show fewer' : `+ ${candidates.length - 4} more options`}
         </button>
@@ -166,20 +169,20 @@ function FoodStopContent({ stop, onSelectStation }) {
   );
 }
 
-function HotelStopContent({ stop, onSelectStation }) {
+function HotelStopContent({ stop, onSelectStation, cfg }) {
   const [showAll, setShowAll] = useState(false);
   const candidates = stop.candidates || [];
 
   if (candidates.length === 0) {
     return (
-      <div className="text-sm text-gray-400 italic mt-1">No hotels found nearby</div>
+      <div className="text-sm text-slate-500 italic mt-2">No hotels found nearby</div>
     );
   }
 
   const visible = showAll ? candidates : candidates.slice(0, 3);
 
   return (
-    <div className="space-y-2 mt-1">
+    <div className="space-y-1.5 mt-2">
       {visible.map((c, i) => {
         const isSelected = c.id === stop.selected?.id;
         return (
@@ -189,24 +192,24 @@ function HotelStopContent({ stop, onSelectStation }) {
             onClick={() => onSelectStation(c)}
             className={`w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${
               isSelected
-                ? 'border-purple-400 bg-purple-50 shadow-sm'
-                : 'border-gray-200 bg-white hover:border-purple-300'
+                ? `${cfg.selectedBorder} shadow-md`
+                : `border-white/8 bg-white/3 ${cfg.hoverBorder}`
             }`}
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-800 truncate">
+                <div className="text-sm font-semibold text-white truncate">
                   {c.name || 'Hotel'}
                 </div>
-                <div className="text-xs text-gray-500 capitalize">{c.tourismType || 'Hotel'}</div>
+                <div className="text-xs text-slate-500 capitalize">{c.tourismType || 'Hotel'}</div>
                 {c.stars && (
-                  <div className="text-xs text-yellow-500">
+                  <div className="text-xs text-yellow-400">
                     {'★'.repeat(Math.min(parseInt(c.stars, 10), 5))}
                   </div>
                 )}
               </div>
               {isSelected && (
-                <div className="text-xs text-purple-500 font-medium flex-shrink-0">✓ Selected</div>
+                <div className="text-xs text-purple-400 font-semibold flex-shrink-0">✓ Selected</div>
               )}
             </div>
           </button>
@@ -216,7 +219,7 @@ function HotelStopContent({ stop, onSelectStation }) {
         <button
           type="button"
           onClick={() => setShowAll((x) => !x)}
-          className="text-xs text-gray-400 hover:text-gray-600 w-full text-center py-0.5"
+          className="text-xs text-slate-600 hover:text-slate-400 w-full text-center py-0.5 transition-colors"
         >
           {showAll ? 'Show fewer' : `+ ${candidates.length - 3} more options`}
         </button>
@@ -233,29 +236,29 @@ export default function StopCard({ stop, index, locked, onSelectStation, onStopF
 
   return (
     <div
-      className={`rounded-xl border p-3 transition-all ${cfg.bgClass} ${locked ? 'opacity-50' : ''}`}
+      className={`rounded-xl border-l-4 border border-white/6 bg-white/3 p-3.5 transition-all cursor-pointer hover:bg-white/5 ${cfg.borderClass} ${locked ? 'opacity-40' : ''}`}
       onClick={() => !locked && onStopFocus?.(stop)}
     >
-      <div className="flex items-center gap-2 mb-1">
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${cfg.badgeClass}`}>
+      <div className="flex items-center gap-2.5 mb-0.5">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${cfg.badgeClass}`}>
           {index + 1}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span>{cfg.icon}</span>
-            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{cfg.label}</span>
-            {locked && <span className="text-xs text-gray-400">(completed)</span>}
+            <span className="text-sm">{cfg.icon}</span>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{cfg.label}</span>
+            {locked && <span className="text-xs text-slate-600">(completed)</span>}
           </div>
-          <div className="text-xs text-gray-400 flex gap-2">
+          <div className="text-xs text-slate-600 flex gap-2 mt-0.5">
             {dist != null && <span>{fmtMiles(dist)} along route</span>}
             {eta && <span>· ETA {eta}</span>}
           </div>
         </div>
       </div>
 
-      {stop.type === 'gas' && <GasStopContent stop={stop} onSelectStation={selectWithStop} />}
-      {stop.type === 'food' && <FoodStopContent stop={stop} onSelectStation={selectWithStop} />}
-      {stop.type === 'hotel' && <HotelStopContent stop={stop} onSelectStation={selectWithStop} />}
+      {stop.type === 'gas' && <GasStopContent stop={stop} onSelectStation={selectWithStop} cfg={cfg} />}
+      {stop.type === 'food' && <FoodStopContent stop={stop} onSelectStation={selectWithStop} cfg={cfg} />}
+      {stop.type === 'hotel' && <HotelStopContent stop={stop} onSelectStation={selectWithStop} cfg={cfg} />}
     </div>
   );
 }

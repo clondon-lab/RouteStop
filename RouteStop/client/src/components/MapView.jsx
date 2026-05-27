@@ -29,12 +29,12 @@ function makeIcon(emoji, color, size = 32) {
 }
 
 const ICONS = {
-  origin: makeIcon('📍', '#3B82F6'),
-  dest: makeIcon('🏁', '#1D4ED8'),
-  gas: makeIcon('⛽', '#16A34A'),
-  food: makeIcon('🍽️', '#EA580C'),
-  hotel: makeIcon('🏨', '#9333EA'),
-  gasAlt: makeIcon('⛽', '#86EFAC', 26),
+  origin: makeIcon('📍', '#22C55E'),
+  dest: makeIcon('🏁', '#0F172A'),
+  gas: makeIcon('⛽', '#22C55E'),
+  food: makeIcon('🍽️', '#F97316'),
+  hotel: makeIcon('🏨', '#A855F7'),
+  gasAlt: makeIcon('⛽', '#4ADE80', 26),
 };
 
 function FitBounds({ coords }) {
@@ -67,15 +67,15 @@ export default function MapView({ plan, origin, destination, focusedStop }) {
       attributionControl={true}
     >
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         maxZoom={19}
       />
 
       {/* Route polyline */}
       {routeCoords && (
         <>
-          <Polyline positions={routeCoords} color="#3B82F6" weight={4} opacity={0.85} />
+          <Polyline positions={routeCoords} color="#22C55E" weight={4} opacity={0.9} />
           <FitBounds coords={plan.route.geometry.coordinates} />
         </>
       )}
@@ -105,7 +105,7 @@ export default function MapView({ plan, origin, destination, focusedStop }) {
             <Circle
               center={[gs.center.lat, gs.center.lng]}
               radius={gs.radiusUsed * 1609.34}
-              pathOptions={{ color: '#16A34A', fillColor: '#86EFAC', fillOpacity: 0.1, weight: 1 }}
+              pathOptions={{ color: '#22C55E', fillColor: '#22C55E', fillOpacity: 0.06, weight: 1 }}
             />
             <Marker position={[gs.selected.lat, gs.selected.lng]} icon={ICONS.gas}>
               <Popup>

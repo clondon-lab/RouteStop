@@ -6,7 +6,8 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #0F172A;
 }
 
 .leaflet-container {
@@ -14,7 +15,65 @@ html, body, #root {
   width: 100%;
 }
 
-/* Thin scrollbar for panels */
+/* Dark scrollbar */
 .panel-scroll::-webkit-scrollbar { width: 4px; }
-.panel-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+.panel-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
 .panel-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Glassmorphism panel */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.glass-panel-right {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255,255,255,0.06);
+}
+
+.glass-panel-bottom {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Indeterminate progress bar */
+@keyframes progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(500%); }
+}
+.progress-indeterminate {
+  width: 20%;
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+
+/* Green glow pulse for loading button */
+@keyframes green-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  50% { box-shadow: 0 0 24px 6px rgba(34,197,94,0.25); }
+}
+.btn-glow-pulse {
+  animation: green-glow 2s ease-in-out infinite;
+}
+
+/* Leaflet popup dark theme */
+.leaflet-popup-content-wrapper {
+  background: #1E293B;
+  color: #E2E8F0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.leaflet-popup-tip {
+  background: #1E293B;
+}
+.leaflet-popup-content {
+  margin: 10px 14px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+}

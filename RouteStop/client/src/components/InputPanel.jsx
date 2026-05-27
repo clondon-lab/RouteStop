@@ -10,6 +10,9 @@ const OPT_OPTIONS = [
   { key: 'fastest', label: 'Fastest', icon: '⚡' },
 ];
 
+const inputCls = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-colors';
+const labelCls = 'block text-xs font-medium text-slate-400 mb-1.5';
+
 export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
@@ -76,14 +79,14 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Step 1: Route */}
       <section>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</div>
-          <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Your Route</h3>
+        <div className="flex items-center gap-2.5 mb-3.5">
+          <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 text-green-400 text-xs flex items-center justify-center font-bold">1</div>
+          <h3 className="font-semibold text-slate-300 text-xs uppercase tracking-widest">Your Route</h3>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <div className="flex gap-2">
             <div className="flex-1">
               <NominatimAutocomplete
@@ -98,13 +101,13 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
               type="button"
               onClick={getGeolocation}
               disabled={geoLoading}
-              title="Use my current location"
-              className="mt-5 px-2.5 py-2 border border-gray-200 rounded-lg text-sm hover:bg-blue-50 hover:border-blue-300 transition-colors disabled:opacity-50"
+              title="Use my location"
+              className="mt-6 px-2.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition-colors disabled:opacity-40"
             >
               {geoLoading ? '…' : '📍'}
             </button>
           </div>
-          {errors.origin && <div className="text-red-500 text-xs">{errors.origin}</div>}
+          {errors.origin && <div className="text-red-400 text-xs">{errors.origin}</div>}
 
           <NominatimAutocomplete
             label="Destination"
@@ -113,15 +116,15 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
             placeholder="Where are you going?"
             onSelect={(r) => setDestination(r)}
           />
-          {errors.destination && <div className="text-red-500 text-xs">{errors.destination}</div>}
+          {errors.destination && <div className="text-red-400 text-xs">{errors.destination}</div>}
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Departure Time (optional)</label>
+            <label className={labelCls}>Departure Time <span className="text-slate-600">(optional)</span></label>
             <input
               type="datetime-local"
               value={departureTime}
               onChange={(e) => setDepartureTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputCls + ' [color-scheme:dark]'}
             />
           </div>
         </div>
@@ -129,14 +132,14 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
 
       {/* Step 2: Your Car */}
       <section>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</div>
-          <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Your Car</h3>
+        <div className="flex items-center gap-2.5 mb-3.5">
+          <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 text-green-400 text-xs flex items-center justify-center font-bold">2</div>
+          <h3 className="font-semibold text-slate-300 text-xs uppercase tracking-widest">Your Car</h3>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
-              Miles Remaining <span className="text-red-500">*</span>
+            <label className={labelCls}>
+              Miles Remaining in Tank <span className="text-red-400">*</span>
             </label>
             <input
               type="number"
@@ -144,24 +147,24 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
               onChange={(e) => setMilesRemaining(e.target.value)}
               placeholder="e.g. 280"
               min="1"
-              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.milesRemaining ? 'border-red-400' : 'border-gray-200'}`}
+              className={inputCls + (errors.milesRemaining ? ' border-red-500/50 ring-1 ring-red-500/30' : '')}
             />
-            <div className="text-xs text-gray-400 mt-0.5">Check your dashboard for miles-to-empty</div>
-            {errors.milesRemaining && <div className="text-red-500 text-xs">{errors.milesRemaining}</div>}
+            <div className="text-xs text-slate-600 mt-1">Check your dashboard for miles-to-empty</div>
+            {errors.milesRemaining && <div className="text-red-400 text-xs mt-0.5">{errors.milesRemaining}</div>}
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Fuel Type</label>
-            <div className="flex gap-1">
+            <label className={labelCls}>Fuel Type</label>
+            <div className="flex gap-1.5">
               {FUEL_TYPES.map((ft) => (
                 <button
                   key={ft}
                   type="button"
                   onClick={() => setFuelType(ft)}
-                  className={`flex-1 py-1.5 text-xs rounded-lg border transition-colors capitalize ${
+                  className={`flex-1 py-2 text-xs rounded-xl border transition-all capitalize font-medium ${
                     fuelType === ft
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-200 text-gray-600 hover:border-blue-300'
+                      ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20'
+                      : 'border-white/10 text-slate-400 hover:border-green-500/40 hover:text-slate-300 bg-white/3'
                   }`}
                 >
                   {ft}
@@ -171,17 +174,17 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Optimization</label>
-            <div className="flex gap-1">
+            <label className={labelCls}>Optimization</label>
+            <div className="flex gap-1.5">
               {OPT_OPTIONS.map((o) => (
                 <button
                   key={o.key}
                   type="button"
                   onClick={() => handleOptChange(o.key)}
-                  className={`flex-1 py-1.5 text-xs rounded-lg border transition-colors flex flex-col items-center gap-0.5 ${
+                  className={`flex-1 py-2.5 text-xs rounded-xl border transition-all flex flex-col items-center gap-1 font-medium ${
                     optimizationPreference === o.key
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-200 text-gray-600 hover:border-blue-300'
+                      ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20'
+                      : 'border-white/10 text-slate-400 hover:border-green-500/40 hover:text-slate-300 bg-white/3'
                   }`}
                 >
                   <span>{o.icon}</span>
@@ -197,9 +200,9 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
 
       {/* Step 3: Extra Stops */}
       <section>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">3</div>
-          <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Extra Stops</h3>
+        <div className="flex items-center gap-2.5 mb-3.5">
+          <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 text-green-400 text-xs flex items-center justify-center font-bold">3</div>
+          <h3 className="font-semibold text-slate-300 text-xs uppercase tracking-widest">Extra Stops</h3>
         </div>
         <LifestyleStops
           foodStops={foodStops}
@@ -211,15 +214,15 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
+        className={`w-full py-3.5 bg-green-500 hover:bg-green-400 disabled:bg-green-500/50 text-white font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-lg shadow-green-500/25 ${loading ? 'btn-glow-pulse' : ''}`}
       >
         {loading ? (
           <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             Planning your trip…
           </>
         ) : (
-          '🗺️ Plan My Trip'
+          '🗺️  Plan My Trip'
         )}
       </button>
     </form>

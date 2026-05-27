@@ -7,45 +7,44 @@ export default function ItineraryPanel({ plan, onSelectStation, onStopFocus, mid
 
   return (
     <div className="space-y-3">
-      {/* Trip summary */}
-      <div className="bg-blue-600 rounded-xl p-4 text-white">
-        <div className="grid grid-cols-2 gap-2 text-sm">
+      {/* Trip summary card */}
+      <div className="rounded-xl border border-green-500/20 bg-green-500/8 p-4">
+        <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <div className="text-blue-200 text-xs uppercase tracking-wide">Distance</div>
-            <div className="font-semibold">{fmtMiles(summary.totalDistance)}</div>
+            <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mb-0.5">Distance</div>
+            <div className="font-bold text-white">{fmtMiles(summary.totalDistance)}</div>
           </div>
           <div>
-            <div className="text-blue-200 text-xs uppercase tracking-wide">Drive Time</div>
-            <div className="font-semibold">{fmtDuration(summary.totalDuration)}</div>
+            <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mb-0.5">Drive Time</div>
+            <div className="font-bold text-white">{fmtDuration(summary.totalDuration)}</div>
           </div>
           <div>
-            <div className="text-blue-200 text-xs uppercase tracking-wide">Gas Stops</div>
-            <div className="font-semibold">{summary.noGasNeeded ? 'None needed' : summary.gasStopCount}</div>
+            <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mb-0.5">Gas Stops</div>
+            <div className="font-bold text-white">{summary.noGasNeeded ? 'None needed' : summary.gasStopCount}</div>
           </div>
           {summary.estimatedFuelCost && (
             <div>
-              <div className="text-blue-200 text-xs uppercase tracking-wide">Est. Fuel Cost</div>
-              <div className="font-semibold">{fmtCost(summary.estimatedFuelCost)}</div>
+              <div className="text-slate-500 text-xs uppercase tracking-wide font-medium mb-0.5">Est. Fuel Cost</div>
+              <div className="font-bold text-green-400">{fmtCost(summary.estimatedFuelCost)}</div>
             </div>
           )}
         </div>
 
         {summary.noGasNeeded && (
-          <div className="mt-2 text-sm bg-blue-500 rounded-lg px-3 py-1.5">
+          <div className="mt-3 text-sm text-green-300 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
             You have enough range to reach your destination.
           </div>
         )}
 
         {!summary.hasGooglePrices && !summary.noGasNeeded && (
-          <div className="mt-2 text-xs text-blue-200">
+          <div className="mt-2 text-xs text-slate-500">
             Add a Google Places API key to see live fuel prices.
           </div>
         )}
       </div>
 
-      {/* Stop cards */}
       {itinerary.length === 0 && (
-        <div className="text-center text-gray-400 text-sm py-4">
+        <div className="text-center text-slate-500 text-sm py-6">
           No stops needed — you have enough range!
         </div>
       )}
