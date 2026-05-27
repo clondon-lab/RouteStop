@@ -18,7 +18,6 @@ const WEIGHTS = {
   fastest: { p: 0.0, d: 1.0 },
 };
 
-// Merge Overpass stations with Google Places price data by proximity
 function mergeWithPrices(overpassStations, googleStations) {
   return overpassStations.map((station) => {
     const nearby = googleStations
@@ -27,7 +26,7 @@ function mergeWithPrices(overpassStations, googleStations) {
         const dy = (gs.lng - station.lng) * 111000;
         return { gs, dist: Math.sqrt(dx * dx + dy * dy) };
       })
-      .filter(({ dist }) => dist < 200) // within ~200m
+      .filter(({ dist }) => dist < 200)
       .sort((a, b) => a.dist - b.dist)[0];
 
     return {
@@ -39,7 +38,6 @@ function mergeWithPrices(overpassStations, googleStations) {
   });
 }
 
-// Add detour approximation (avoid OSRM per-station calls for speed)
 function addDetours(stations, routeCoords) {
   return stations.map((s) => ({
     ...s,
@@ -47,12 +45,56 @@ function addDetours(stations, routeCoords) {
   }));
 }
 
-// Calculate ETA at a given distance along route
 function calcEta(departureMs, distanceAlongRoute, totalDistance, totalDurationSec) {
   if (!departureMs || !totalDurationSec) return null;
   const frac = distanceAlongRoute / totalDistance;
   const elapsedSec = frac * totalDurationSec;
   return new Date(departureMs + elapsedSec * 1000).toISOString();
+}
+
+// Search for gas stations at a given point, expanding radius if needed.
+// Returns { stations, radiusUsed, widened }.
+async function searchGasAtPoint(lat, lng, startRadius, maxRadius, fuelType, coords) {
+  let radius = startRadius;
+  while (radius <= maxRadius) {
+    const [overpass, google] = await Promise.all([
+      getGasStations(lat, lng, radius).catch(() => []),
+      getGasStationsWithPrices(lat, lng, radius, fuelType).catch(() => []),
+    ]);
+    if (overpass.length > 0) {
+      return { stations: addDetours(mergeWithPrices(overpass, google), coords), radiusUsed: radius, widened: radius > startRadius };
+    }
+    if (google.length > 0) {
+      return { stations: addDetours(google, coords), radiusUsed: radius, widened: false };
+    }
+    radius += 0.5;
+  }
+  return { stations: [], radiusUsed: maxRadius, widened: true };
+}
+
+// Find gas stations for a zone, falling back to nearby corridor points if the center is empty.
+async function findGasStationsInZone(zone, corridorRadius, fuelType, coords, cum, totalDistance) {
+  // Phase 1: search at zone center with expanding radius up to 5 mi
+  const primary = await searchGasAtPoint(
+    zone.center.lat, zone.center.lng,
+    corridorRadius, 5, fuelType, coords
+  );
+  if (primary.stations.length > 0) {
+    return { ...primary, noStationsFound: false };
+  }
+
+  // Phase 2: walk along the route ±15, ±30, ±45 miles from the zone center
+  const shifts = [15, -15, 30, -30, 45, -45];
+  for (const shift of shifts) {
+    const shiftedDist = Math.max(0, Math.min(zone.distanceAlongRoute + shift, totalDistance - 1));
+    const pt = getPointAtDistance(coords, cum, shiftedDist);
+    const result = await searchGasAtPoint(pt.lat, pt.lng, 2, 4, fuelType, coords);
+    if (result.stations.length > 0) {
+      return { ...result, widened: true, noStationsFound: false };
+    }
+  }
+
+  return { stations: [], radiusUsed: 5, widened: true, noStationsFound: true };
 }
 
 router.post('/', async (req, res) => {
@@ -64,8 +106,8 @@ router.post('/', async (req, res) => {
       fuelType = 'regular',
       optimizationPreference = 'balanced',
       vehicleProfile = null,
-      foodStops = [],
-      hotelStops = [],
+      foodStopCount = 0,
+      hotelStopCount = 0,
       corridorRadius = 1,
       departureTime = null,
     } = req.body;
@@ -85,46 +127,29 @@ router.post('/', async (req, res) => {
     const coords = geometry.coordinates;
     const cum = buildCumDist(coords);
 
-    // 2. Full range
+    // 2. Full range — when no vehicle profile, assume a realistic full-tank default
+    // so stop spacing stays reasonable regardless of how low the current tank is.
     let fullRangeMiles = mr;
     if (vehicleProfile?.mpg && vehicleProfile?.tankSize) {
       fullRangeMiles = parseFloat(vehicleProfile.mpg) * parseFloat(vehicleProfile.tankSize);
+    } else {
+      fullRangeMiles = Math.max(mr, 300);
     }
 
-    // 3. Stop zones (cap at 7 to keep response times reasonable)
+    // 3. Stop zones (cap at 7)
     const zones = calcStopZones(geometry, mr, fullRangeMiles).slice(0, 7);
     const noGasNeeded = zones.length === 0;
 
     const weights = WEIGHTS[optimizationPreference] || WEIGHTS.balanced;
     const departureMs = departureTime ? new Date(departureTime).getTime() : null;
 
-    // 4. Gas stops (parallel zones)
+    // 4. Gas stops — corridor-aware search
     const gasStops = await Promise.all(
       zones.map(async (zone, idx) => {
-        let radius = corridorRadius;
-        let stations = [];
-        let widened = false;
-
-        while (radius <= 5 && stations.length === 0) {
-          if (radius > corridorRadius) widened = true;
-          const [overpassStations, googleStations] = await Promise.all([
-            getGasStations(zone.center.lat, zone.center.lng, radius).catch(() => []),
-            getGasStationsWithPrices(zone.center.lat, zone.center.lng, radius, fuelType).catch(() => []),
-          ]);
-
-          if (overpassStations.length > 0) {
-            const merged = mergeWithPrices(overpassStations, googleStations);
-            stations = addDetours(merged, coords);
-          } else if (googleStations.length > 0) {
-            // Overpass unavailable — use Google Places as station source
-            stations = addDetours(googleStations, coords);
-            break;
-          } else {
-            radius += 0.5;
-          }
-        }
-
-        const scored = scoreStations(stations, weights.p, weights.d);
+        const found = await findGasStationsInZone(
+          zone, corridorRadius, fuelType, coords, cum, totalDistance
+        );
+        const scored = scoreStations(found.stations, weights.p, weights.d);
         const eta = calcEta(departureMs, zone.distanceAlongRoute, totalDistance, totalDuration);
 
         return {
@@ -132,9 +157,9 @@ router.post('/', async (req, res) => {
           zoneIndex: idx,
           distanceAlongRoute: zone.distanceAlongRoute,
           center: zone.center,
-          radiusUsed: radius,
-          widened,
-          noStationsFound: scored.length === 0,
+          radiusUsed: found.radiusUsed,
+          widened: found.widened,
+          noStationsFound: found.noStationsFound,
           stations: scored,
           selected: scored[0] || null,
           eta,
@@ -142,16 +167,18 @@ router.post('/', async (req, res) => {
       })
     );
 
-    // 5. Food stops
+    // 5. Auto-place food stops evenly along the route based on count
+    const foodStopMiles = Array.from({ length: foodStopCount }, (_, i) =>
+      (totalDistance * (i + 1)) / (foodStopCount + 1)
+    );
     const foodStopResults = await Promise.all(
-      foodStops.map(async (fs) => {
-        const point = getPointAtDistance(coords, cum, parseFloat(fs.atMile));
+      foodStopMiles.map(async (atMile) => {
+        const point = getPointAtDistance(coords, cum, atMile);
         const candidates = await getRestaurants(point.lat, point.lng, 1).catch(() => []);
-        const eta = calcEta(departureMs, parseFloat(fs.atMile), totalDistance, totalDuration);
+        const eta = calcEta(departureMs, atMile, totalDistance, totalDuration);
         return {
           type: 'food',
-          requestedAtMile: parseFloat(fs.atMile),
-          requestedTime: fs.timeWindow || null,
+          requestedAtMile: atMile,
           point,
           candidates,
           selected: candidates[0] || null,
@@ -160,15 +187,18 @@ router.post('/', async (req, res) => {
       })
     );
 
-    // 6. Hotel stops
+    // 6. Auto-place hotel stops evenly along the route based on count
+    const hotelStopMiles = Array.from({ length: hotelStopCount }, (_, i) =>
+      (totalDistance * (i + 1)) / (hotelStopCount + 1)
+    );
     const hotelStopResults = await Promise.all(
-      hotelStops.map(async (hs) => {
-        const point = getPointAtDistance(coords, cum, parseFloat(hs.atMile));
+      hotelStopMiles.map(async (atMile) => {
+        const point = getPointAtDistance(coords, cum, atMile);
         const candidates = await getHotels(point.lat, point.lng, 1).catch(() => []);
-        const eta = calcEta(departureMs, parseFloat(hs.atMile), totalDistance, totalDuration);
+        const eta = calcEta(departureMs, atMile, totalDistance, totalDuration);
         return {
           type: 'hotel',
-          requestedAtMile: parseFloat(hs.atMile),
+          requestedAtMile: atMile,
           point,
           candidates,
           selected: candidates[0] || null,

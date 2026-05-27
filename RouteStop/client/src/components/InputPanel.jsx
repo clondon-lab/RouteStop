@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import NominatimAutocomplete from './NominatimAutocomplete';
 import VehicleProfile from './VehicleProfile';
-import LifestyleStops from './LifestyleStops';
 
 const FUEL_TYPES = ['regular', 'midgrade', 'premium', 'diesel'];
 const OPT_OPTIONS = [
@@ -13,6 +12,27 @@ const OPT_OPTIONS = [
 const inputCls = 'w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-colors';
 const labelCls = 'block text-xs font-medium text-slate-400 mb-1.5';
 
+function CountSelector({ value, onChange, options, activeClass }) {
+  return (
+    <div className="flex gap-1.5">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={`flex-1 py-2 text-xs rounded-xl border transition-all font-medium ${
+            value === o.value
+              ? activeClass
+              : 'border-white/10 text-slate-400 hover:text-slate-300 bg-white/5'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
@@ -21,8 +41,8 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
   const [optimizationPreference, setOptimizationPreference] = useState('balanced');
   const [departureTime, setDepartureTime] = useState('');
   const [vehicleProfile, setVehicleProfile] = useState({ makeModel: '', year: '', mpg: '', tankSize: '' });
-  const [foodStops, setFoodStops] = useState([]);
-  const [hotelStops, setHotelStops] = useState([]);
+  const [foodStopCount, setFoodStopCount] = useState(0);
+  const [hotelStopCount, setHotelStopCount] = useState(0);
   const [geoLoading, setGeoLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -67,8 +87,8 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
       fuelType,
       optimizationPreference,
       vehicleProfile,
-      foodStops: foodStops.filter((s) => s.atMile),
-      hotelStops: hotelStops.filter((s) => s.atMile),
+      foodStopCount,
+      hotelStopCount,
       departureTime: departureTime || null,
     });
   };
@@ -77,6 +97,20 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
     setOptimizationPreference(key);
     if (plan) onRescoreChange?.(key);
   };
+
+  const foodOptions = [
+    { value: 0, label: 'None' },
+    { value: 1, label: '1 stop' },
+    { value: 2, label: '2 stops' },
+    { value: 3, label: '3 stops' },
+    { value: 4, label: '4 stops' },
+  ];
+
+  const hotelOptions = [
+    { value: 0, label: 'None' },
+    { value: 1, label: '1 night' },
+    { value: 2, label: '2 nights' },
+  ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -164,7 +198,7 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
                   className={`flex-1 py-2 text-xs rounded-xl border transition-all capitalize font-medium ${
                     fuelType === ft
                       ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20'
-                      : 'border-white/10 text-slate-400 hover:border-green-500/40 hover:text-slate-300 bg-white/3'
+                      : 'border-white/10 text-slate-400 hover:border-green-500/40 hover:text-slate-300 bg-white/5'
                   }`}
                 >
                   {ft}
@@ -184,7 +218,7 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
                   className={`flex-1 py-2.5 text-xs rounded-xl border transition-all flex flex-col items-center gap-1 font-medium ${
                     optimizationPreference === o.key
                       ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20'
-                      : 'border-white/10 text-slate-400 hover:border-green-500/40 hover:text-slate-300 bg-white/3'
+                      : 'border-white/10 text-slate-400 hover:border-green-500/40 hover:text-slate-300 bg-white/5'
                   }`}
                 >
                   <span>{o.icon}</span>
@@ -198,17 +232,38 @@ export default function InputPanel({ onPlan, loading, plan, onRescoreChange }) {
         </div>
       </section>
 
-      {/* Step 3: Extra Stops */}
+      {/* Step 3: Stops */}
       <section>
         <div className="flex items-center gap-2.5 mb-3.5">
           <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/40 text-green-400 text-xs flex items-center justify-center font-bold">3</div>
-          <h3 className="font-semibold text-slate-300 text-xs uppercase tracking-widest">Extra Stops</h3>
+          <h3 className="font-semibold text-slate-300 text-xs uppercase tracking-widest">Stops</h3>
         </div>
-        <LifestyleStops
-          foodStops={foodStops}
-          hotelStops={hotelStops}
-          onChange={({ food, hotel }) => { setFoodStops(food); setHotelStops(hotel); }}
-        />
+        <div className="space-y-3.5">
+          <div>
+            <label className={labelCls}>
+              🍽️ Food Stops
+              <span className="text-slate-600 font-normal ml-1.5">— placed evenly along your route</span>
+            </label>
+            <CountSelector
+              value={foodStopCount}
+              onChange={setFoodStopCount}
+              options={foodOptions}
+              activeClass="bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20"
+            />
+          </div>
+          <div>
+            <label className={labelCls}>
+              🏨 Hotel Stops
+              <span className="text-slate-600 font-normal ml-1.5">— for overnight stays</span>
+            </label>
+            <CountSelector
+              value={hotelStopCount}
+              onChange={setHotelStopCount}
+              options={hotelOptions}
+              activeClass="bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20"
+            />
+          </div>
+        </div>
       </section>
 
       <button
